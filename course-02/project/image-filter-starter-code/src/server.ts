@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
+
 (async () => {
 
   // Init the Express application
@@ -9,34 +10,56 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   // Set the network port
   const port = process.env.PORT || 8082;
-  
+  let fetchedImages : Array<string> = [];
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
-  // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
-  // GET /filteredimage?image_url={{URL}}
-  // endpoint to filter an image from a public url.
-  // IT SHOULD
-  //    1
-  //    1. validate the image_url query
-  //    2. call filterImageFromURL(image_url) to filter the image
-  //    3. send the resulting file in the response
-  //    4. deletes any files on the server on finish of the response
-  // QUERY PARAMATERS
-  //    image_url: URL of a publicly accessible image
-  // RETURNS
-  //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
+  // Root Endpoint
+  // Displays a simple message to the user
+  app.get( "/filteredimage/", async ( req, res ) => {
+    let {image_url} = req.query;
+    if ( !image_url ) {
+      return res.status(400)
+                .send(`image url is required`);
+    }
+    let fname = '';
 
-  /**************************************************************************** */
+    try{
+    const fetchImage = filterImageFromURL(image_url);
+    fetchImage.then(value => {
+      fname = value;
+      fetchedImages.push(fname);
+      res.status(200).sendFile(fname, err => {
+        if (err) {
+            console.log(err);
+            res.sendStatus(500);
+        }
+        const deleteImages = deleteLocalFiles(fetchedImages);
+      deleteImages.then(value => {
+        console.log("File deleted succesffully")
+        fetchedImages = [];
+      });
+     });
+    })
 
-  //! END @TODO1
+    fetchImage.catch(error => {
+      return res.send(error);
+    })
+    
+  } catch (error) {
+    if (error) {
+        return error.message
+    }
+  }
+  finally{
+  }
+
+    
+  } );
+
   
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
-    res.send("try GET /filteredimage?image_url={{}}")
-  } );
-  
 
   // Start the Server
   app.listen( port, () => {
