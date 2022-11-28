@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -13,11 +13,9 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   let fetchedImages : Array<string> = [];
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
-
   // Root Endpoint
   // Displays a simple message to the user
-  //app.get( "/filteredimage/", async ( request : Request, response : Response) => {
-  app.get( "/filteredimage/", async ( request, response) => {
+  app.get( "/filteredimage/", async ( request:Request , response : Response) => {
     let image_URL : string = request.query;
     if ( !image_URL ) {
       return response.status(400)
